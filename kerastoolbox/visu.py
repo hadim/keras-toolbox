@@ -14,29 +14,29 @@ def make_mosaic(im, nrows, ncols, border=1):
 
     nimgs = len(im)
     imshape = im[0].shape
-    
+
     mosaic = ma.masked_all((nrows * imshape[0] + (nrows - 1) * border,
                             ncols * imshape[1] + (ncols - 1) * border),
                             dtype=np.float32)
-    
+
     paddedh = imshape[0] + border
     paddedw = imshape[1] + border
     im
     for i in range(nimgs):
-        
+
         row = int(np.floor(i / ncols))
         col = i % ncols
-        
+
         mosaic[row * paddedh:row * paddedh + imshape[0],
                col * paddedw:col * paddedw + imshape[1]] = im[i]
-        
+
     return mosaic
 
 
 def get_weights_mosaic(model, layer_id, n=64):
     """
     """
-    
+
     # Get Keras layer
     layer = model.layers[layer_id]
 
@@ -44,17 +44,17 @@ def get_weights_mosaic(model, layer_id, n=64):
     if not hasattr(layer, "W"):
         raise Exception("The layer {} of type {} does not have weights.".format(layer.name,
                                                            layer.__class__.__name__))
-        
+
     weights = layer.W.get_value()
-    
+
     # For now we only handle Conv layer like with 4 dimensions
     if weights.ndim != 4:
         raise Exception("The layer {} has {} dimensions which is not supported.".format(layer.name, weights.ndim))
-    
+
     # n define the maximum number of weights to display
     if weights.shape[0] < n:
         n = weights.shape[0]
-        
+
     # Create the mosaic of weights
     nrows = int(np.round(np.sqrt(n)))
     ncols = int(nrows)
@@ -63,7 +63,7 @@ def get_weights_mosaic(model, layer_id, n=64):
         ncols +=1
 
     mosaic = make_mosaic(weights[:n, 0], nrows, ncols, border=1)
-    
+
     return mosaic
 
 
@@ -71,28 +71,28 @@ def plot_weights(model, layer_id, n=64, ax=None, **kwargs):
     """Plot the weights of a specific layer. ndim must be 4.
     """
     import matplotlib.pyplot as plt
-    
+
     # Set default matplotlib parameters
     if not 'interpolation' in kwargs.keys():
         kwargs['interpolation'] = "none"
-        
+
     if not 'cmap' in kwargs.keys():
         kwargs['cmap'] = "gray"
-    
+
     layer = model.layers[layer_id]
-    
+
     mosaic = get_weights_mosaic(model, layer_id, n=64)
-    
+
     # Plot the mosaic
     if not ax:
         fig = plt.figure()
         ax = plt.subplot()
-    
+
     im = ax.imshow(mosaic, **kwargs)
     ax.set_title("Layer #{} called '{}' of type {}".format(layer_id, layer.name, layer.__class__.__name__))
-    
+
     plt.colorbar(im, ax=ax)
-    
+
     return ax
 
 
@@ -101,7 +101,7 @@ def plot_all_weights(model, n=64, **kwargs):
     """
     import matplotlib.pyplot as plt
     from mpl_toolkits.axes_grid1 import make_axes_locatable
-    
+
     # Set default matplotlib parameters
     if not 'interpolation' in kwargs.keys():
         kwargs['interpolation'] = "none"
@@ -119,7 +119,7 @@ def plot_all_weights(model, n=64, **kwargs):
 
 
     fig = plt.figure(figsize=(15, 15))
-    
+
     n_mosaic = len(layers_to_show)
     nrows = int(np.round(np.sqrt(n_mosaic)))
     ncols = int(nrows)
@@ -132,14 +132,14 @@ def plot_all_weights(model, n=64, **kwargs):
         mosaic = get_weights_mosaic(model, layer_id=layer_id, n=n)
 
         ax = fig.add_subplot(nrows, ncols, i+1)
-        
+
         im = ax.imshow(mosaic, **kwargs)
         ax.set_title("Layer #{} called '{}' of type {}".format(layer_id, layer.name, layer.__class__.__name__))
 
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.1)
         plt.colorbar(im, cax=cax)
-        
+
     fig.tight_layout()
     return fig
 
@@ -152,39 +152,39 @@ def plot_feature_map(model, layer_id, X, n=256, ax=None, **kwargs):
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     layer = model.layers[layer_id]
-    
+
     try:
         get_activations = K.function([model.layers[0].input, K.learning_phase()], [layer.output,])
         activations = get_activations([X, 0])[0]
     except:
         # Ugly catch, a cleaner logic is welcome here.
         raise Exception("This layer cannot be plotted.")
-        
+
     # For now we only handle feature map with 4 dimensions
     if activations.ndim != 4:
         raise Exception("Feature map of '{}' has {} dimensions which is not supported.".format(layer.name,
                                                                                              activations.ndim))
-        
+
     # Set default matplotlib parameters
     if not 'interpolation' in kwargs.keys():
         kwargs['interpolation'] = "none"
 
     if not 'cmap' in kwargs.keys():
         kwargs['cmap'] = "gray"
-        
+
     fig = plt.figure(figsize=(15, 15))
-    
+
     # Compute nrows and ncols for images
     n_mosaic = len(activations)
     nrows = int(np.round(np.sqrt(n_mosaic)))
     ncols = int(nrows)
     if (nrows ** 2) < n_mosaic:
         ncols +=1
-        
+
     # Compute nrows and ncols for mosaics
     if activations[0].shape[0] < n:
         n = activations[0].shape[0]
-        
+
     nrows_inside_mosaic = int(np.round(np.sqrt(n)))
     ncols_inside_mosaic = int(nrows_inside_mosaic)
 
@@ -196,7 +196,7 @@ def plot_feature_map(model, layer_id, X, n=256, ax=None, **kwargs):
         mosaic = make_mosaic(feature_map[:n], nrows_inside_mosaic, ncols_inside_mosaic, border=1)
 
         ax = fig.add_subplot(nrows, ncols, i+1)
-        
+
         im = ax.imshow(mosaic, **kwargs)
         ax.set_title("Feature map #{} \nof layer#{} \ncalled '{}' \nof type {} ".format(i, layer_id,
                                                                                   layer.name,
@@ -205,7 +205,7 @@ def plot_feature_map(model, layer_id, X, n=256, ax=None, **kwargs):
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.1)
         plt.colorbar(im, cax=cax)
-            
+
     fig.tight_layout()
     return fig
 
@@ -213,50 +213,48 @@ def plot_feature_map(model, layer_id, X, n=256, ax=None, **kwargs):
 def plot_all_feature_maps(model, X, n=256, ax=None, **kwargs):
     """
     """
-    
+
     figs = []
-    
+
     for i, layer in enumerate(model.layers):
-        
+
         try:
             fig = plot_feature_map(model, i, X, n=n, ax=ax, **kwargs)
         except:
             pass
         else:
             figs.append(fig)
-            
+
     return figs
 
 
-def browse_full_deep_images(X, Y1, Y2=None):
+def browse_images(images, manual_update=False):
     from mpl_toolkits.axes_grid1 import make_axes_locatable
-    
-    n = len(X)
-    
+    from ipywidgets import interact
+
+    n = len(images[list(images.keys())[0]])
+
     def nice_imshow(data, title, ax):
         im = ax.imshow(data, interpolation="none", cmap="gray")
-        ax.set_title(title)
-        
+        ax.set_title(title, fontsize=18)
+
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.1)
         plt.colorbar(im, cax=cax)
-    
+
     def view_image(i):
-        
+
         fig = plt.figure(figsize=(16, 8))
 
-        n_ax = 3
-        if not Y2:
-            n_ax = 2
-        
-        ax = plt.subplot(1, n_ax, 1)
-        nice_imshow(X[i, 0], "X", ax)
-        
-        ax = plt.subplot(1, n_ax, 2)
-        nice_imshow(Y1[i, 0], "Y1", ax)
-        
-        if Y2:
-            ax = plt.subplot(1, n_ax, 3)
-            nice_imshow(Y2[i, 0], "Y2", ax)
-        
-    interact(view_image, i=(0, n))# , __manual=True)
+        n_ax = len(images)
+
+        for j, (label, data) in enumerate(images.items()):
+
+            ax = plt.subplot(1, n_ax, j+1)
+
+            if data[i].ndim == 3:
+                nice_imshow(data[i, 0], label, ax)
+            else:
+                nice_imshow(data[i], label, ax)
+
+    interact(view_image, i=(0, n) , __manual=manual_update)
