@@ -17,3 +17,5 @@ Keras.egg-info
 
 # developer environments
 .idea
+
+*.egg-info
