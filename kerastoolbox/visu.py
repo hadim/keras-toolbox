@@ -289,4 +289,4 @@ def browse_images(images, manual_update=False):
             else:
                 nice_imshow(data[i], label, ax)
 
-    interact(view_image, i=(0, n) , __manual=manual_update)
+    interact(view_image, i=(0, n - 1) , __manual=manual_update)
