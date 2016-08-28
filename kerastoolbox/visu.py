@@ -96,7 +96,7 @@ def plot_weights(model, layer_id, n=64, ax=None, **kwargs):
     return ax
 
 
-def plot_all_weights(model, n=64, **kwargs):
+def plot_all_weights(model, n=64, n_columns=3, **kwargs):
     """
     """
     import matplotlib.pyplot as plt
@@ -117,15 +117,17 @@ def plot_all_weights(model, n=64, **kwargs):
             if weights.ndim == 4:
                 layers_to_show.append((i, layer))
 
-
-    fig = plt.figure(figsize=(15, 15))
-
     n_mosaic = len(layers_to_show)
-    nrows = int(np.round(np.sqrt(n_mosaic)))
-    ncols = int(nrows)
+    nrows = n_mosaic // n_columns
+    ncols = n_columns
 
-    if nrows ** 2 < n_mosaic:
-        ncols +=1
+    if ncols ** 2 < n_mosaic:
+        nrows +=1
+
+    fig_w = 15
+    fig_h = nrows * fig_w / ncols
+
+    fig = plt.figure(figsize=(fig_w, fig_h))
 
     for i, (layer_id, layer) in enumerate(layers_to_show):
 
@@ -134,17 +136,30 @@ def plot_all_weights(model, n=64, **kwargs):
         ax = fig.add_subplot(nrows, ncols, i+1)
 
         im = ax.imshow(mosaic, **kwargs)
-        ax.set_title("Layer #{} called '{}' of type {}".format(layer_id, layer.name, layer.__class__.__name__))
+        ax.set_title("Layer #{} called '{}' \nof type {}".format(layer_id, layer.name, layer.__class__.__name__))
 
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.1)
         plt.colorbar(im, cax=cax)
 
-    fig.tight_layout()
+        ax.axis('off')
+
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+        if ax.is_first_row():
+            ax.spines['top'].set_visible(True)
+        if ax.is_last_row():
+            ax.spines['bottom'].set_visible(True)
+        if ax.is_first_col():
+            ax.spines['left'].set_visible(True)
+        if ax.is_last_col():
+            ax.spines['right'].set_visible(True)
+
+    #fig.tight_layout()
     return fig
 
 
-def plot_feature_map(model, layer_id, X, n=256, ax=None, **kwargs):
+def plot_feature_map(model, layer_id, X, n=256, n_columns=3, ax=None, **kwargs):
     """
     """
     import keras.backend as K
@@ -172,14 +187,13 @@ def plot_feature_map(model, layer_id, X, n=256, ax=None, **kwargs):
     if not 'cmap' in kwargs.keys():
         kwargs['cmap'] = "gray"
 
-    fig = plt.figure(figsize=(15, 15))
-
     # Compute nrows and ncols for images
     n_mosaic = len(activations)
-    nrows = int(np.round(np.sqrt(n_mosaic)))
-    ncols = int(nrows)
-    if (nrows ** 2) < n_mosaic:
-        ncols +=1
+    nrows = n_mosaic // n_columns
+    ncols = n_columns
+
+    if ncols ** 2 < n_mosaic:
+        nrows +=1
 
     # Compute nrows and ncols for mosaics
     if activations[0].shape[0] < n:
@@ -190,6 +204,11 @@ def plot_feature_map(model, layer_id, X, n=256, ax=None, **kwargs):
 
     if nrows_inside_mosaic ** 2 < n:
         ncols_inside_mosaic += 1
+
+    fig_w = 15
+    fig_h = nrows * fig_w / ncols
+
+    fig = plt.figure(figsize=(fig_w, fig_h))
 
     for i, feature_map in enumerate(activations):
 
@@ -206,7 +225,20 @@ def plot_feature_map(model, layer_id, X, n=256, ax=None, **kwargs):
         cax = divider.append_axes("right", size="5%", pad=0.1)
         plt.colorbar(im, cax=cax)
 
-    fig.tight_layout()
+        ax.axis('off')
+
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+        if ax.is_first_row():
+            ax.spines['top'].set_visible(True)
+        if ax.is_last_row():
+            ax.spines['bottom'].set_visible(True)
+        if ax.is_first_col():
+            ax.spines['left'].set_visible(True)
+        if ax.is_last_col():
+            ax.spines['right'].set_visible(True)
+
+    # fig.tight_layout()
     return fig
 
 
