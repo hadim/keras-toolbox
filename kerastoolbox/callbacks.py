@@ -1,51 +1,140 @@
-import time
+from datetime import datetime
+import uuid
+import json
+
+import numpy as np
 
 from keras.callbacks import Callback
 
+from .utils import json_serial
 
-class TelegramNotifier(Callback):
-    """Very basic notifier that send message to Telegram during a Keras model training.
-    For now I don't a lot of informations. Telegram allow a lot of different kind of informations to sent, from
-    text to videos and images. The Telegram API allows the bot to ask question to the user.
 
-    All of this make could make this callback very powerfull.
-
-    Few random ideas :
-
-    - at each epoch end returns some statistics about the loss and the accuracy.
-    - set a parameter to control the whole verbosity
-    - at the end of the training returns a plot of the loss against # of epoch
+class Monitor(Callback):
+    """Monitor retrieve and continuously update the state a Keras model into the `self.state` attribute.
     """
 
+    def __init__(self, date_format='%Y-%m-%d %H:%M'):
 
-    def __init__(self, api_token, chat_id):
+        super().__init__()
 
-        self.check_telegram_module()
-        import telegram
-
-        super(TelegramNotifier, self).__init__()
-
-        self.bot = telegram.Bot(token=api_token)
-        self.chat_id = chat_id
+        self.date_format = date_format
+        
+        self.state = {}
+        self.state['epochs'] = []
+        
+        # Add/generate these attributes in keras.models.Model ?
+        self.state['name'] = 'A Keras model'
+        self.state['model_id'] = str(uuid.uuid4())
+        self.state['training_id'] = str(uuid.uuid4())
 
     def on_train_begin(self, logs={}):
+        
+        message = 'Monitor initialized.\n' \
+                  'Name of the model is "{}"\n' \
+                  'Model ID is {}\n' \
+                  'Training ID is {}'
+        self.notify(message.format(self.state['name'],
+                                   self.state['model_id'],
+                                   self.state['training_id']))
 
-        message = "Training started at {} for {} epoch with {} samples."
-        self.notify(message.format(time.ctime(), self.params['nb_epoch'], self.params['nb_sample']))
+        # Add the model to the state
+        self.state['model_json'] = self.model.to_json()
+        
+        self.state['params'] = self.params
+        
+        self.state['train_start_time'] = datetime.now()
+        
+        message = "Training started at {} for {} epochs with {} samples with a {} layers model."
+        self.notify(message.format(self.state['train_start_time'].strftime(self.date_format),
+                                   self.params['nb_epoch'],
+                                   self.params['nb_sample'],
+                                   len(self.model.layers)))
+        
+    def on_train_end(self, logs={}):
+        
+        self.state['train_end_time'] = datetime.now()
+        self.state['train_duration'] = self.state['train_end_time'] - self.state['train_start_time']
+
+        # In hours
+        duration = (self.state['train_end_time'] - \
+                    self.state['train_start_time']).total_seconds()
+        self.state['train_duration'] = int(round(duration / 3600))
+        
+        message = "Training is done at {} for a duration of {} hours."
+        self.notify(message.format(self.state['train_end_time'].strftime(self.date_format),
+                                   self.state['train_duration']))
 
     def on_batch_begin(self, batch, logs={}):
-
         pass
 
     def on_batch_end(self, batch, logs={}):
-
         pass
+    
+    def on_epoch_begin(self, epoch, logs={}):
+
+        self.state['current_epoch'] = {}
+        self.state['current_epoch']['epoch'] = epoch
+        self.state['current_epoch']['start_time'] = datetime.now()
 
     def on_epoch_end(self, epoch, logs={}):
 
-        message = "Epoch {}/{} is done at {}."
-        self.notify(message.format(epoch+1, self.params['nb_epoch'], time.ctime()))
+        self.state['current_epoch']['end_time'] = datetime.now()
+        self.state['current_epoch']['logs'] = logs
+        
+        # In seconds
+        duration = (self.state['current_epoch']['end_time'] - \
+                    self.state['current_epoch']['start_time']).total_seconds()
+        self.state['current_epoch']['duration'] = duration
+        
+        self.state['epochs'].append(self.state['current_epoch'])
+        
+        self.state['current_epoch']['average_minute_per_epoch'] = self.average_minute_per_epoch()
+  
+        message = "Epoch {}/{} is done at {}. Average minutes/epoch is {:.2f}."
+        self.notify(message.format(epoch + 1, self.params['nb_epoch'],
+                                   self.state['current_epoch']['end_time'].strftime(self.date_format),
+                                   self.state['current_epoch']['average_minute_per_epoch']))\
+        
+        nice_logs = ' | '.join(["{} = {:.6f}".format(k, v) for k, v in logs.items()])
+        self.notify("Logs are : {}".format(nice_logs))
+        
+        # Reset current epoch
+        self.state['current_epoch'] = {}
 
+    def notify(self, message, parse_mode=None):
+        pass
+    
+    def average_minute_per_epoch(self):
+        minute_per_epoch = [(epoch['duration'] / 60) / (epoch['epoch'] + 1) for epoch in self.state['epochs']]
+        return np.mean(minute_per_epoch)
+
+
+        
+class PrintMonitor(Monitor):
+    """This monitor only print messages with the classic `print` function
+    """
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+    def notify(self, message):
+        print(message)
+        
+        
+class TelegramMonitor(Monitor):
+    """This monitor send messages to a Telegram chat ID with a bot.
+    """
+    
+    def __init__(self, api_token, chat_id, **kwargs):
+        
+        self.check_telegram_module()
+        import telegram
+        
+        super().__init__(**kwargs)
+        
+        self.bot = telegram.Bot(token=api_token)
+        self.chat_id = chat_id
+        
     def check_telegram_module(self):
 
         try:
@@ -56,6 +145,26 @@ class TelegramNotifier(Callback):
                             "in order to use the TelegramNotifier Keras callback.")
 
     def notify(self, message, parse_mode=None):
+        
         ret = self.bot.send_message(chat_id=self.chat_id, text=message, parse_mode=parse_mode)
         return ret
+    
+    
+class FileMonitor(Monitor):
+    """This monitor write a JSON file every time a message is sent. The JSON file contains all
+        the state of the current training.
+    """
+    
+    
+    def __init__(self, filepath, **kwargs):
+        
+        super().__init__(**kwargs)
+        
+        self.filepath = filepath
+
+    def notify(self, message, parse_mode=None):
+
+        with open(self.filepath, 'w') as f:
+            f.write(json.dumps(self.state, default=json_serial, indent=4, sort_keys=True))
+    
 
