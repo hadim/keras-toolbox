@@ -19,3 +19,4 @@ Keras.egg-info
 .idea
 
 *.egg-info
+.ipynb_checkpoints
