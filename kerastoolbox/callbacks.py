@@ -59,6 +59,3 @@ class TelegramNotifier(Callback):
         ret = self.bot.send_message(chat_id=self.chat_id, text=message, parse_mode=parse_mode)
         return ret
 
-
-# Monkey Patching
-keras.callbacks.TelegramNotifier = TelegramNotifier
