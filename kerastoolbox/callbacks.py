@@ -31,7 +31,7 @@ class TelegramNotifier(Callback):
     def on_train_begin(self, logs={}):
 
         message = "Training started at {} for {} epoch with {} samples."
-        self.notify(message.format(time.ctime(), self.params['nb_sample'], self.params['nb_epoch']))
+        self.notify(message.format(time.ctime(), self.params['nb_epoch'], self.params['nb_sample']))
 
     def on_batch_begin(self, batch, logs={}):
 
