@@ -105,8 +105,10 @@ class Monitor(Callback):
         pass
     
     def average_minute_per_epoch(self):
-        minute_per_epoch = [(epoch['duration'] / 60) / (epoch['epoch'] + 1) for epoch in self.state['epochs']]
-        return np.mean(minute_per_epoch)
+        total_duration = self.state['current_epoch']['end_time'].total_seconds() - self.state['train_start_time'].total_seconds()
+        total_duration /= 60
+        minute_per_epoch = total_duration / (self.state['current_epoch']['epoch'] + 1)
+        return minute_per_epoch
 
 
         
