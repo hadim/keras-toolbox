@@ -6,7 +6,7 @@
 
 *Your every day Keras toolbox.*
 
-The spirit of this library is to add some features missing from Keras and that make your workflow more smooth and easier. If I these features start to be widely used it could be a good idea propose them as a PR in the Keras repo.
+The spirit of this library is to add some features missing from Keras and that make your workflow more smooth and easier. If these features start to be widely used it could be a good idea to propose them as a PR in the Keras repo.
 
 Current features are :
 
