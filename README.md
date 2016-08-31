@@ -16,6 +16,14 @@ Current features are :
 
 - **Augmentation functions** : trying to replace the Keras augmentation API but the code is very crappy at the moment.
 
+## Dependencies
+
+- Python 3 only (it's time to move)
+- the classics `numpy`, `pandas`, `scipy`
+- `Keras`
+- `matplotlib` for the visualization
+- `python-telegram-bot` for the `TelegramMonitor` callback
+
 ## Documentation
 
 The project is not big enough to write a proper doc for now. See this [Notebook](doc/example.ipynb) for a short documentation.
