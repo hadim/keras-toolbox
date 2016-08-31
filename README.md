@@ -1,8 +1,8 @@
 # keras-toolbox
 
-[![PyPI version](https://img.shields.io/pypi/v/keras-toolbox.svg?maxAge=2592000)]()
-[![PyPI downloads](https://img.shields.io/pypi/dm/keras-toolbox.svg?maxAge=2592000)]()
-[![License ](https://img.shields.io/pypi/l/keras-toolbox.svg?maxAge=2592000)]()
+[![PyPI version](https://img.shields.io/pypi/v/keras-toolbox.svg?maxAge=2591000)]()
+[![PyPI downloads](https://img.shields.io/pypi/dm/keras-toolbox.svg?maxAge=2591000)]()
+[![License ](https://img.shields.io/pypi/l/keras-toolbox.svg?maxAge=2591000)]()
 
 *Your every day Keras toolbox.*
 
