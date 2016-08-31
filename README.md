@@ -18,7 +18,7 @@ Current features are :
 
 ## Documentation
 
-The project is not big enough to write a proper doc for now. See this [Notebook](example.ipynb) for a short documentation.
+The project is not big enough to write a proper doc for now. See this [Notebook](doc/example.ipynb) for a short documentation.
 
 ## Author
 
