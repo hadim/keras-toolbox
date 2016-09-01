@@ -25,7 +25,7 @@ class Monitor(Callback):
 
     def __init__(self, plot_history=None, date_format='%Y-%m-%d %H:%M'):
 
-        super().__init__()
+        super(Monitor,self).__init__()
 
         self.can_plot = False
 
@@ -182,7 +182,7 @@ class TelegramMonitor(Monitor):
         self.check_telegram_module()
         import telegram
 
-        super().__init__(**kwargs)
+        super(TelegramMonitor,self).__init__(**kwargs)
 
         self.can_plot = True
 
