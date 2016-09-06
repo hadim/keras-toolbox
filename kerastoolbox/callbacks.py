@@ -200,15 +200,24 @@ class TelegramMonitor(Monitor):
 
     def notify(self, message, parse_mode=None):
 
-        ret = self.bot.send_message(chat_id=self.chat_id, text=message, parse_mode=parse_mode)
-        return ret
+    	try:
+        	ret = self.bot.send_message(chat_id=self.chat_id, text=message, parse_mode=parse_mode)
+        	return ret
+        except NewConnectionError:
+        	print("Error with notify() in TelegramMonitor.")
+        	return None
 
     def notify_image(self, fig):
         bf = io.BytesIO()
         fig.savefig(bf, format='png')
         bf.seek(0)
 
-        self.bot.sendPhoto(chat_id=self.chat_id, photo=bf)
+        try:
+        	self.bot.sendPhoto(chat_id=self.chat_id, photo=bf)
+        except NewConnectionError:
+        	print("Error with notify_image() in TelegramMonitor.")
+        	return None
+
 
 
 class FileMonitor(Monitor):
