@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 
 setup(name='keras-toolbox',
-      version='0.1.1',
+      version='0.1.2',
       description='Everyday toolbox for Keras',
       author='Hadrien Mary',
       author_email='hadrien.mary@gmail.com',
