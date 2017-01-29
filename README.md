@@ -15,6 +15,12 @@ Current features are :
 
 - **Augmentation functions** : trying to replace the Keras augmentation API but the code is very crappy at the moment.
 
+## Installation
+
+```
+pip install keras-toolbox
+```
+
 ## Dependencies
 
 - Python 3 only (it's time to move)
