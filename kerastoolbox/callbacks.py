@@ -59,8 +59,8 @@ class Monitor(Callback):
 
         message = "Training started at {} for {} epochs with {} samples with a {} layers model."
         self.notify(message.format(self.state['train_start_time'].strftime(self.date_format),
-                                   self.params['nb_epoch'],
-                                   self.params['nb_sample'],
+                                   self.params['epochs'],
+                                   self.params['samples'],
                                    len(self.model.layers)))
 
     def on_train_end(self, logs={}):
@@ -112,7 +112,7 @@ class Monitor(Callback):
 
         # Write and send message
         message = "Epoch {}/{} is done at {}. Average minutes/epoch is {:.2f}."
-        self.notify(message.format(epoch + 1, self.params['nb_epoch'],
+        self.notify(message.format(epoch + 1, self.params['epochs'],
                                    self.state['current_epoch']['end_time'].strftime(self.date_format),
                                    self.state['current_epoch']['average_minute_per_epoch']))\
 
