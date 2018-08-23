@@ -14,9 +14,9 @@ setup(name='keras-toolbox',
       install_requires=[
             'tqdm>=4.25.0,<5',
             'h5py>=2.8.0,<3',
-            'matplotlib>=2.2.3<3',
+            'matplotlib>=2.2,<3',
             'scipy>=1.1.0,<2',
             'numpy>=1.15,<2',
-            'pandas>0.23.4,<1',
+            'pandas>=0.23,<1',
       ]
      )
